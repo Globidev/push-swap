@@ -1,0 +1,8 @@
+[package]
+name = "push-swap"
+version = "0.1.0"
+authors = ["Guillaume Depardon <guillaume.depardon@gmail.com>"]
+
+[dependencies]
+structopt = "0.2"
+colored = "1.6"
