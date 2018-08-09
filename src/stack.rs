@@ -91,9 +91,11 @@ impl<T> FromIterator<T> for Stack<T> {
 
 impl<T: fmt::Display> fmt::Display for Stack<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(n) = self.0.front() {
+        let mut it = self.0.iter();
+
+        if let Some(n) = it.next() {
             write!(f, "{}", n)?;
-            for n in self.0.iter().skip(1) {
+            for n in it {
                 write!(f, " {}", n)?
             }
         }
