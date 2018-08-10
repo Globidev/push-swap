@@ -1,12 +1,14 @@
-use stack::Stack;
+use utils::StackN;
 use instruction::Instruction;
 
 use std::iter::{repeat, once};
 
 mod dumb;
+mod astar;
 
-pub fn solve(stack: Stack<u32>) {
-    let instrs = dumb::DumbSolver::new(stack);
+pub fn solve(stack: StackN) {
+    // let instrs = dumb::DumbSolver::new(stack);
+    let instrs = astar::Astar::new(stack);
 
     instrs.for_each(|i| println!("{}", i));
 }
@@ -15,7 +17,7 @@ fn repeat_n<T: Clone>(t: T, n: usize) -> impl Iterator<Item = T> {
     repeat(t).take(n)
 }
 
-fn rotation(stack: &Stack<u32>, at: usize) -> (Instruction, usize) {
+fn rotation(stack: &StackN, at: usize) -> (Instruction, usize) {
     use std::cmp::Ordering::Less;
 
     let mid = stack.len() / 2;
@@ -26,7 +28,7 @@ fn rotation(stack: &Stack<u32>, at: usize) -> (Instruction, usize) {
     }
 }
 
-fn sorted_rot(stack: &Stack<u32>) -> Option<(Instruction, usize)> {
+fn sorted_rot(stack: &StackN) -> Option<(Instruction, usize)> {
     let mut pivot = None;
     let raw = stack.raw();
 

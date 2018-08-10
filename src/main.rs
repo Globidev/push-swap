@@ -6,6 +6,7 @@ mod stack;
 mod instruction;
 mod checker;
 mod solver;
+mod utils;
 
 use stack::Stack;
 use options::Options;

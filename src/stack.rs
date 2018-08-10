@@ -69,15 +69,6 @@ impl<T: PartialOrd> Stack<T> {
             }
         })
     }
-
-    // pub fn maximum(&self) -> Option<(&T, usize)> {
-    //     self.0.iter().zip(0..).fold(None, |min, (e, i)| {
-    //         match min {
-    //             Some((p, _)) if e > p => Some((e, i)),
-    //             _                      => min
-    //         }
-    //     })
-    // }
 }
 
 impl<T> FromIterator<T> for Stack<T> {

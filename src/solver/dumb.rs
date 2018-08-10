@@ -1,7 +1,8 @@
 use super::*;
+use utils::StackN;
 
 pub struct DumbSolver {
-    stack: Stack<u32>,
+    stack: StackN,
     pushed: usize,
     state: DumbSolverState
 }
@@ -13,7 +14,7 @@ enum DumbSolverState {
 }
 
 impl DumbSolver {
-    pub fn new(stack: Stack<u32>) -> Self {
+    pub fn new(stack: StackN) -> Self {
         Self { stack, pushed: 0, state: DumbSolverState::Looping }
     }
 }
