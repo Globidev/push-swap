@@ -1,5 +1,4 @@
 use super::*;
-use utils::*;
 
 use std::collections::{VecDeque, HashSet, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
@@ -9,7 +8,7 @@ pub struct Astar {
 }
 
 impl Astar {
-    pub fn new(stack: StackN) -> Self {
+    pub fn new(stack: impl Stack<N>) -> Self {
         let moves = solve(stack)
             .into_iter()
             .rev()
@@ -27,7 +26,7 @@ impl Iterator for Astar {
     }
 }
 
-fn solve(stack: StackN) -> Vec<Instruction> {
+fn solve(stack: impl Stack<N>) -> Vec<Instruction> {
     let mut open_set = VecDeque::new();
     let mut closed_set = HashSet::new();
 
@@ -53,26 +52,26 @@ fn solve(stack: StackN) -> Vec<Instruction> {
 }
 
 #[derive(Default, Debug, Clone)]
-struct Node {
-    pub a: StackN,
-    pub b: StackN,
+struct Node<S> {
+    pub a: S,
+    pub b: S,
     instrs: Vec<Instruction>
 }
 
-impl PartialEq for Node {
-    fn eq(&self, other: &Node) -> bool {
+impl<S: Stack<N>> PartialEq for Node<S> {
+    fn eq(&self, other: &Node<S>) -> bool {
         self.a == other.a && self.b == other.b
     }
 }
 
-impl Hash for Node {
+impl<S: Stack<N>> Hash for Node<S> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.a.hash(state);
         self.b.hash(state);
     }
 }
 
-impl Eq for Node {}
+impl<S: Stack<N>> Eq for Node<S> {}
 
 fn hash<T: Hash>(t: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
@@ -80,7 +79,7 @@ fn hash<T: Hash>(t: &T) -> u64 {
     hasher.finish()
 }
 
-fn neighbors(node: Node) -> impl Iterator<Item = Node> {
+fn neighbors<S: Stack<N>>(node: Node<S>) -> impl Iterator<Item = Node<S>> {
     use self::Instruction::*;
 
     const INSTRS: [Instruction; 11] = [
@@ -99,7 +98,7 @@ fn neighbors(node: Node) -> impl Iterator<Item = Node> {
         )
 }
 
-fn valid_instr(instr: &Instruction, node: &Node) -> bool {
+fn valid_instr<S: Stack<N>>(instr: &Instruction, node: &Node<S>) -> bool {
     use self::Instruction::*;
 
     let last_instr = node.instrs.last().unwrap_or(&PushB);
@@ -199,7 +198,7 @@ fn valid_instr(instr: &Instruction, node: &Node) -> bool {
     }
 }
 
-fn transform_instr(instr: &Instruction, n: &Node) -> Node {
+fn transform_instr<S: Stack<N>>(instr: &Instruction, n: &Node<S>) -> Node<S> {
     let mut node = n.clone();
 
     node.instrs.push(instr.clone());

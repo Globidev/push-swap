@@ -1,12 +1,15 @@
 use stack::Stack;
 use instruction::Instruction;
 
-pub type StackN = Stack<u32>;
+pub type N = u32;
 
-pub fn execute(instruction: &Instruction, a: &mut StackN, b: &mut StackN) {
+pub fn execute<S>(instr: &Instruction, a: &mut S, b: &mut S)
+where
+    S: Stack<N> + Sized
+{
     use self::Instruction::*;
 
-    match instruction {
+    match instr {
         PushA  => if let Some(n) = b.pop() { a.push(n) },
         PushB  => if let Some(n) = a.pop() { b.push(n) },
 

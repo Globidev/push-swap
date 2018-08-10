@@ -1,8 +1,9 @@
-use super::*;
-use utils::StackN;
+use std::iter::{repeat, once};
 
-pub struct DumbSolver {
-    stack: StackN,
+use super::*;
+
+pub struct DumbSolver<S> {
+    stack: S,
     pushed: usize,
     state: DumbSolverState
 }
@@ -13,13 +14,16 @@ enum DumbSolverState {
     Looping,
 }
 
-impl DumbSolver {
-    pub fn new(stack: StackN) -> Self {
+impl<S> DumbSolver<S> {
+    pub fn new(stack: S) -> Self {
         Self { stack, pushed: 0, state: DumbSolverState::Looping }
     }
 }
 
-impl Iterator for DumbSolver {
+impl<S> Iterator for DumbSolver<S>
+where
+    S: Stack<N>
+{
     type Item = Instruction;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -34,8 +38,9 @@ impl Iterator for DumbSolver {
             },
             Looping => match self.stack.minimum() {
                 None => Done(repeat_n(PushA, self.pushed).collect()),
-                Some((_, min_idx)) => match sorted_rot(&self.stack) {
-                    Some((instr, n)) => {
+                Some((_, min_idx)) => match self.stack.sorted_at() {
+                    Some(i) => {
+                        let (instr, n) = rotation(&self.stack, i);
                         let leftover_instrs = repeat_n(PushA, self.pushed)
                             .chain(repeat_n(instr, n));
                         Done(leftover_instrs.collect())
@@ -61,5 +66,20 @@ impl Iterator for DumbSolver {
 
         self.state = next_state;
         self.next()
+    }
+}
+
+fn repeat_n<T: Clone>(t: T, n: usize) -> impl Iterator<Item = T> {
+    repeat(t).take(n)
+}
+
+fn rotation(stack: &impl Stack<N>, at: usize) -> (Instruction, usize) {
+    use std::cmp::Ordering::Less;
+
+    let mid = stack.len() / 2;
+
+    match at.cmp(&mid) {
+        Less => (Instruction::RotateA, at),
+        _    => (Instruction::ReverseRotateA, stack.len() - at),
     }
 }
