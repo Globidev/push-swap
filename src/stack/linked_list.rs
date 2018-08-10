@@ -50,7 +50,11 @@ where
     fn sorted_at(&self) -> Option<usize> {
         let mut pivot = None;
 
-        for ((a, b), i) in self.0.iter().zip(self.0.iter().skip(1)).zip(1..) {
+        let lefts = self.0.iter();
+        let rights = self.0.iter().skip(1).chain(self.0.iter().take(1));
+        let indexes = 1..;
+
+        for ((a, b), i) in lefts.zip(rights).zip(indexes) {
             if a > b {
                 if pivot.is_some() { return None }
                 else { pivot = Some(i) }
