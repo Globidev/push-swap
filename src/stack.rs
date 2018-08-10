@@ -2,7 +2,7 @@ use std::collections::LinkedList;
 use std::iter::FromIterator;
 use std::fmt;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone)]
 pub struct Stack<T>(LinkedList<T>);
 
 impl<T> Stack<T> {
