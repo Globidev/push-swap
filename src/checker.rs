@@ -50,7 +50,7 @@ where
     println!("Sorted: {}", sorted);
     println!("Moves: {}", instr_count.to_string().cyan());
     let ratio = instr_count as f32 / stack.len() as f32;
-    println!("Ratio: {:.5}", ratio.to_string().cyan());
+    println!("Ratio: {}", format!("{:.3}", ratio).cyan());
 
     exit(status);
 }
