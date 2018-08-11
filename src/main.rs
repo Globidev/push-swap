@@ -36,12 +36,26 @@ fn main() {
 }
 
 
-
 fn solve<Solver, Stack, Solution>(solver: Solver, stack: Stack)
 where
     Stack: stack::Stack<utils::N>,
     Solver: FnOnce(Stack) -> Solution,
     Solution: Iterator<Item = instruction::Instruction>
 {
-    solver(stack).for_each(|i| println!("{}", i));
+    use std::fmt::Write;
+
+    let buffer_size = 4096;
+    let output_buffer = String::with_capacity(buffer_size);
+
+    let remaining_output = solver(stack)
+        .fold(output_buffer, |mut buff, instr| {
+            if buff.len() >= buffer_size - 16 {
+                print!("{}", buff);
+                buff.clear();
+            }
+            writeln!(&mut buff, "{}", instr).unwrap();
+            buff
+        });
+
+    print!("{}", remaining_output);
 }
