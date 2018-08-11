@@ -13,7 +13,7 @@ pub trait Stack<T: PartialOrd>:
     fn pop(&mut self) -> Option<T>;
     fn swap(&mut self);
     fn rotate(&mut self);
-    fn reverse_rotate(&mut self);
+    fn rrotate(&mut self);
 
     // Helpers
     fn len(&self) -> usize;
@@ -22,8 +22,9 @@ pub trait Stack<T: PartialOrd>:
     fn minimum(&self) -> Option<(&T, usize)>;
 
     fn rotate_n(&mut self, n: usize);
-    fn reverse_rotate_n(&mut self, n: usize) {
+    fn rrotate_n(&mut self, n: usize) {
         let len = self.len();
         self.rotate_n(len - n)
     }
+
 }

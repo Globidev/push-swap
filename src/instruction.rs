@@ -6,7 +6,7 @@ pub enum Instruction {
     PushA, PushB,
     SwapA, SwapB, SwapBoth,
     RotateA, RotateB, RotateBoth,
-    ReverseRotateA, ReverseRotateB, ReverseRotateBoth,
+    RRotateA, RRotateB, RRotateBoth,
 }
 
 #[derive(Debug)]
@@ -27,9 +27,9 @@ impl FromStr for Instruction {
             "ra"  => Ok(RotateA),
             "rb"  => Ok(RotateB),
             "rr"  => Ok(RotateBoth),
-            "rra" => Ok(ReverseRotateA),
-            "rrb" => Ok(ReverseRotateB),
-            "rrr" => Ok(ReverseRotateBoth),
+            "rra" => Ok(RRotateA),
+            "rrb" => Ok(RRotateB),
+            "rrr" => Ok(RRotateBoth),
             _     => Err(InvalidInstruction(String::from(as_string)))
         }
     }
@@ -48,9 +48,9 @@ impl fmt::Display for Instruction {
             RotateA => "ra",
             RotateB => "rb",
             RotateBoth => "rr",
-            ReverseRotateA => "rra",
-            ReverseRotateB => "rrb",
-            ReverseRotateBoth => "rrr",
+            RRotateA => "rra",
+            RRotateB => "rrb",
+            RRotateBoth => "rrr",
         };
 
         write!(f, "{}", as_string)

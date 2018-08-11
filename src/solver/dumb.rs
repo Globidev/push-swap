@@ -20,10 +20,7 @@ impl<S> DumbSolver<S> {
     }
 }
 
-impl<S> Iterator for DumbSolver<S>
-where
-    S: Stack<N>
-{
+impl<S: Stack<N>> Iterator for DumbSolver<S> {
     type Item = Instruction;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -50,7 +47,7 @@ where
 
                         match instr {
                             RotateA => self.stack.rotate_n(n),
-                            ReverseRotateA => self.stack.reverse_rotate_n(n),
+                            RRotateA => self.stack.rrotate_n(n),
                             _ => ()
                         };
 
@@ -80,6 +77,6 @@ fn rotation(stack: &impl Stack<N>, at: usize) -> (Instruction, usize) {
 
     match at.cmp(&mid) {
         Less => (Instruction::RotateA, at),
-        _    => (Instruction::ReverseRotateA, stack.len() - at),
+        _    => (Instruction::RRotateA, stack.len() - at),
     }
 }

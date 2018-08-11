@@ -32,7 +32,7 @@ where
         }
     }
 
-    fn reverse_rotate(&mut self) {
+    fn rrotate(&mut self) {
         if let Some(back) = self.0.pop_back() {
             self.0.push_front(back)
         }

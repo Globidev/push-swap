@@ -21,8 +21,8 @@ where
         RotateB    => b.rotate(),
         RotateBoth => { a.rotate(); b.rotate() },
 
-        ReverseRotateA    => a.reverse_rotate(),
-        ReverseRotateB    => b.reverse_rotate(),
-        ReverseRotateBoth => { a.reverse_rotate(); b.reverse_rotate(); }
+        RRotateA    => a.rrotate(),
+        RRotateB    => b.rrotate(),
+        RRotateBoth => { a.rrotate(); b.rrotate(); }
     }
 }
