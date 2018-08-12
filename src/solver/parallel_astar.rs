@@ -15,7 +15,7 @@ pub struct ParallelAstar {
 }
 
 impl ParallelAstar {
-    pub fn new(n_threads: usize, stack: impl Stack<N> + Send + 'static) -> Self {
+    pub fn new(n_threads: usize, stack: impl Stack<N>) -> Self {
         // We have the main worker thread + at least 1 stealer so the
         // amount of extra workers we can get is max(0, n_threads - 2)
         let extra_worker_count = n_threads.saturating_sub(2);
@@ -55,7 +55,7 @@ where
     }
 }
 
-fn solve(extra_worker_count: usize, stack: impl Stack<N> + Send + 'static)
+fn solve(extra_worker_count: usize, stack: impl Stack<N>)
     -> VecDeque<Instruction>
 {
     let (worker, stealer) = deque::fifo();
@@ -203,22 +203,4 @@ fn transform_instr<S: Stack<N>>(instr: &Instruction, n: &Node<S>) -> Node<S> {
     execute(instr, &mut node.a, &mut node.b);
 
     node
-}
-
-#[cfg(test)]
-mod tests {
-    extern crate test;
-
-    use self::test::Bencher;
-    use super::solve;
-
-    #[bench]
-    fn bench_par_astar(b: &mut Bencher) {
-        use stack::linked_list::LLStack;
-
-        b.iter(|| {
-            let stack = vec![2, 1].into_iter().collect::<LLStack<_>>();
-            solve(0, stack)
-        });
-    }
 }
