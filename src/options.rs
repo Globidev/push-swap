@@ -1,5 +1,14 @@
 #[derive(StructOpt, Debug)]
-pub enum Options {
+pub struct Options {
+    #[structopt(long="stack-type", default_value="vecdeque")]
+    pub stack_type: StackType,
+
+    #[structopt(subcommand)]
+    pub command: Command
+}
+
+#[derive(StructOpt, Debug)]
+pub enum Command {
     #[structopt(name = "check")]
     Check {
         #[structopt(short="d", long="debug-states")]
@@ -24,6 +33,11 @@ pub enum SolveStrategy {
     AStar, Dumb, ParallelAStar
 }
 
+#[derive(Debug)]
+pub enum StackType {
+    LinkedList, VecDeque, Vec
+}
+
 use std::str::FromStr;
 
 impl FromStr for SolveStrategy {
@@ -31,9 +45,22 @@ impl FromStr for SolveStrategy {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "astar"     => Ok(SolveStrategy::AStar),
-            "dumb"      => Ok(SolveStrategy::Dumb),
-            "par-astar" => Ok(SolveStrategy::ParallelAStar),
+            "astar"     | "a*"  => Ok(SolveStrategy::AStar),
+            "dumb"              => Ok(SolveStrategy::Dumb),
+            "par-astar" | "pa*" => Ok(SolveStrategy::ParallelAStar),
+            invalid => Err(String::from(invalid))
+        }
+    }
+}
+
+impl FromStr for StackType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "linked-list" | "ll" => Ok(StackType::LinkedList),
+            "vec-deque"   | "vd" => Ok(StackType::VecDeque),
+            "vec"         | "v"  => Ok(StackType::Vec),
             invalid => Err(String::from(invalid))
         }
     }

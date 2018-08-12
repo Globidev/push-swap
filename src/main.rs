@@ -1,5 +1,3 @@
-#![feature(test)]
-
 #[macro_use] extern crate structopt;
 extern crate num_cpus;
 
@@ -10,24 +8,39 @@ mod checker;
 mod solver;
 mod utils;
 
-use options::{Options, SolveStrategy};
+use options::{Options, Command, SolveStrategy, StackType};
 use structopt::StructOpt;
 use checker::*;
-use stack::linked_list::LLStack;
+use stack::{linked_list::LLStack, vecdeque::VDStack, vec::VecStack};
 use solver::{astar, dumb, parallel_astar};
 
+use utils::N;
+
 fn main() {
-    match Options::from_args() {
-        Options::Check { debug_states, raw_stack } => {
+    let opts = Options::from_args();
+
+    match opts.stack_type {
+        StackType::LinkedList => run_with_stack_type::<LLStack<N>>(opts.command),
+        StackType::VecDeque   => run_with_stack_type::<VDStack<N>>(opts.command),
+        StackType::Vec        => run_with_stack_type::<VecStack<N>>(opts.command),
+    }
+}
+
+fn run_with_stack_type<Stack>(command: Command)
+where
+    Stack: stack::Stack<N>
+{
+    match command {
+        Command::Check { debug_states, raw_stack } => {
             let app_config = CheckerConfig {
-                stack: raw_stack.into_iter().collect::<LLStack<_>>(),
+                stack: raw_stack.into_iter().collect::<Stack>(),
                 debug_states
             };
             check(app_config);
         },
 
-        Options::Solve { strategy, par_threads, raw_stack } => {
-            let stack = raw_stack.into_iter().collect::<LLStack<_>>();
+        Command::Solve { strategy, par_threads, raw_stack } => {
+            let stack = raw_stack.into_iter().collect::<Stack>();
 
             match strategy {
                 SolveStrategy::AStar => solve(astar::Astar::new, stack),
@@ -44,10 +57,9 @@ fn main() {
     }
 }
 
-
 fn solve<Solver, Stack, Solution>(solver: Solver, stack: Stack)
 where
-    Stack: stack::Stack<utils::N>,
+    Stack: stack::Stack<N>,
     Solver: FnOnce(Stack) -> Solution,
     Solution: Iterator<Item = instruction::Instruction>
 {
