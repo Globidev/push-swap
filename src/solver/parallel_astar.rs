@@ -2,13 +2,13 @@ extern crate crossbeam_deque;
 extern crate smallvec;
 
 use super::*;
+use super::utils::*;
 
-use self::crossbeam_deque::{self as deque, Steal, Stealer};
+use self::crossbeam_deque::{fifo as work_steal_fifo, Steal, Stealer};
 use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
 
-use std::collections::{VecDeque, HashSet, hash_map::DefaultHasher};
-use std::hash::{Hash, Hasher};
+use std::collections::{VecDeque, HashSet};
 
 pub struct ParallelAstar {
     moves: VecDeque<Instruction>
@@ -35,10 +35,73 @@ impl Iterator for ParallelAstar {
 }
 
 type ClosedSet = Arc<RwLock<HashSet<u64>>>;
-type Work<S> = smallvec::SmallVec<[(Node<S>, u64); 10]>;
+// type Work<S> = smallvec::SmallVec<[(Node<S>, u64); 10]>;
+type Work<S> = Vec<(Node<S>, u64)>;
 type WorkSender<S> = mpsc::Sender<Work<S>>;
 
-fn steal_work<S>(closed_set: ClosedSet, stealer: Stealer<Node<S>>, tx: WorkSender<S>)
+fn solve(extra_worker_count: usize, stack: impl Stack<N>)
+    -> VecDeque<Instruction>
+{
+    let (open_set_worker, open_set_stealer) = work_steal_fifo();
+    let (neighbors_tx, neighbors_rx) = mpsc::channel();
+    let closed_set = ClosedSet::default();
+
+    open_set_worker.push(Node { a: stack, ..Default::default() });
+    let mut open_set_size = 1;
+
+    // Spawning the work stealers (at least 1 + extras)
+    for _ in 0..extra_worker_count {
+        thread::spawn({
+            let thread_set = closed_set.clone();
+            let thread_stealer = open_set_stealer.clone();
+            let thread_tx = neighbors_tx.clone();
+            move || compute_neighbors(thread_set, thread_stealer, thread_tx)
+        });
+    }
+
+    thread::spawn({
+        let thread_set = closed_set.clone();
+        move || compute_neighbors(thread_set, open_set_stealer, neighbors_tx)
+    });
+
+    // Process each batch of computed neighbors in the main thread
+    // Buffer them to prevent excessive write locking on the closed set
+    const NODE_BUFFER_SIZE: usize = 512;
+
+    let mut buff_nodes = Vec::with_capacity(NODE_BUFFER_SIZE);
+    let mut buff_hashes = Vec::with_capacity(NODE_BUFFER_SIZE);
+
+    while let Ok(nodes) = neighbors_rx.recv() {
+        open_set_size -= 1;
+
+        // Check for end condition and buffer nodes
+        for (node, hash) in nodes {
+            if node.b.len() == 0 && node.a.is_sorted() {
+                return node.instrs
+            }
+            buff_nodes.push(node);
+            buff_hashes.push(hash);
+        }
+
+        // Process the buffer if there is no more work queued or if the buffer
+        // is about to spill:
+        // current len + (maximum neighbor count =~ 16) > buffer size
+        if open_set_size == 0 || buff_nodes.len() + 16 > NODE_BUFFER_SIZE {
+            closed_set.write().unwrap()
+                .extend(buff_hashes.drain(..));
+
+            open_set_size += buff_nodes.len();
+
+            buff_nodes.drain(..).for_each(|node| {
+                open_set_worker.push(node);
+            })
+        }
+    }
+
+    unreachable!("Stacks are always solvable")
+}
+
+fn compute_neighbors<S>(closed_set: ClosedSet, stealer: Stealer<Node<S>>, tx: WorkSender<S>)
 where
     S: Stack<N>
 {
@@ -53,154 +116,4 @@ where
             }
         }
     }
-}
-
-fn solve(extra_worker_count: usize, stack: impl Stack<N>)
-    -> VecDeque<Instruction>
-{
-    let (worker, stealer) = deque::fifo();
-    let (tx, rx) = mpsc::channel();
-    let closed_set = ClosedSet::default();
-
-    worker.push(Node { a: stack, ..Default::default() });
-
-    for _ in 0..extra_worker_count {
-        thread::spawn({
-            let thread_set = closed_set.clone();
-            let thread_stealer = stealer.clone();
-            let thread_tx = tx.clone();
-            move || steal_work(thread_set, thread_stealer, thread_tx)
-        });
-    }
-
-    thread::spawn({
-        let thread_set = closed_set.clone();
-        move || steal_work(thread_set, stealer, tx)
-    });
-
-    let mut buff_nodes = Vec::with_capacity(512);
-    let mut buff_hashes = Vec::with_capacity(512);
-    let mut pushed = 1;
-
-    while let Ok(nodes) = rx.recv() {
-        pushed -= 1;
-
-        for (node, h) in nodes {
-            if node.b.len() == 0 && node.a.is_sorted() {
-                return node.instrs.clone()
-            }
-            buff_nodes.push(node);
-            buff_hashes.push(h);
-        }
-
-        if pushed == 0 || buff_nodes.len() >= 512 - 16 {
-            match closed_set.write().unwrap() {
-                mut closed_set => closed_set.extend(buff_hashes.drain(..))
-            }
-            pushed += buff_nodes.len();
-            buff_nodes.drain(..).for_each(|node| {
-                worker.push(node);
-            })
-        }
-    }
-
-    unreachable!("Stacks are always solvable")
-}
-
-#[derive(Default, Debug, Clone)]
-struct Node<S> {
-    pub a: S,
-    pub b: S,
-    instrs: VecDeque<Instruction>
-}
-
-impl<S: Stack<N>> PartialEq for Node<S> {
-    fn eq(&self, other: &Node<S>) -> bool {
-        self.a == other.a && self.b == other.b
-    }
-}
-
-impl<S: Stack<N>> Hash for Node<S> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.a.hash(state);
-        self.b.hash(state);
-    }
-}
-
-impl<S: Stack<N>> Eq for Node<S> {}
-
-fn hash<T: Hash>(t: &T) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    t.hash(&mut hasher);
-    hasher.finish()
-}
-
-fn neighbors<S: Stack<N>>(node: Node<S>) -> impl Iterator<Item = Node<S>> {
-    use self::Instruction::*;
-    type ValidateInstruction = fn(usize, usize, &Instruction) -> bool;
-
-    const INSTRS: [(Instruction, ValidateInstruction); 11] = [
-        (RotateBoth, |a_len, b_len, instr|
-            a_len >= 2 && b_len >= 2
-                && !instr_among(instr, &[RRotateA, RRotateB, RRotateBoth, RotateA, RotateB])
-        ),
-        (RotateA, |a_len, _, instr|
-            a_len >= 2 && !instr_among(instr, &[RRotateA, RRotateB, RRotateBoth])
-        ),
-        (RotateB, |_, b_len, instr|
-            b_len >= 2 && !instr_among(instr, &[RRotateA, RRotateB, RRotateBoth])
-        ),
-        (RRotateBoth, |a_len, b_len, instr|
-            a_len >= 2 && b_len >= 2
-                && !instr_among(instr, &[RotateA, RotateB, RotateBoth, RRotateA, RRotateB])
-        ),
-        (RRotateA, |a_len, _, instr|
-            a_len >= 2 && !instr_among(instr, &[RotateA, RotateB, RotateBoth])
-        ),
-        (RRotateB, |_, b_len, instr|
-            b_len >= 2 && !instr_among(instr, &[RotateA, RotateB, RotateBoth])
-        ),
-        (SwapBoth, |a_len, b_len, instr|
-            a_len >= 2 && b_len >= 2 && !instr_among(instr, &[SwapA, SwapB, SwapBoth])
-        ),
-        (SwapA, |a_len, _, instr|
-            a_len >= 2 && !instr_among(instr, &[SwapA, SwapB, SwapBoth])
-        ),
-        (SwapB, |_, b_len, instr|
-            b_len >= 2 && !instr_among(instr, &[SwapA, SwapB, SwapBoth])
-        ),
-        (PushA, |_, b_len, instr|
-            b_len > 0 && instr != &PushB
-        ),
-        (PushB, |a_len, _, instr|
-            a_len >= 2 && instr != &PushA
-        ),
-    ];
-
-    let a_len = node.a.len();
-    let b_len = node.b.len();
-    let last_instr = node.instrs.back().cloned().unwrap_or(PushB);
-
-    INSTRS.iter()
-        .filter(move |(_, valid_instr)| valid_instr(a_len, b_len, &last_instr))
-        .map(move |(instr, _)| transform_instr(instr, &node))
-}
-
-fn instr_among(instr: &Instruction, set: &[Instruction]) -> bool {
-    for set_instr in set {
-        if instr == set_instr {
-            return true
-        }
-    }
-    false
-}
-
-fn transform_instr<S: Stack<N>>(instr: &Instruction, n: &Node<S>) -> Node<S> {
-    let mut node = n.clone();
-
-    node.instrs.push_back(instr.clone());
-
-    execute(instr, &mut node.a, &mut node.b);
-
-    node
 }
