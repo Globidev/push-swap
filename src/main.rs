@@ -1,5 +1,7 @@
-#[macro_use]
-extern crate structopt;
+#![feature(test)]
+
+#[macro_use] extern crate structopt;
+extern crate num_cpus;
 
 mod options;
 mod stack;
@@ -12,7 +14,7 @@ use options::{Options, SolveStrategy};
 use structopt::StructOpt;
 use checker::*;
 use stack::linked_list::LLStack;
-use solver::{astar, dumb};
+use solver::{astar, dumb, parallel_astar};
 
 fn main() {
     match Options::from_args() {
@@ -24,12 +26,19 @@ fn main() {
             check(app_config);
         },
 
-        Options::Solve { strategy, raw_stack } => {
+        Options::Solve { strategy, par_threads, raw_stack } => {
             let stack = raw_stack.into_iter().collect::<LLStack<_>>();
 
             match strategy {
                 SolveStrategy::AStar => solve(astar::Astar::new, stack),
-                SolveStrategy::Dumb => solve(dumb::DumbSolver::new, stack),
+                SolveStrategy::Dumb  => solve(dumb::DumbSolver::new, stack),
+                SolveStrategy::ParallelAStar => {
+                    let solver = |stack| {
+                        let n_threads = par_threads.unwrap_or_else(num_cpus::get);
+                        parallel_astar::ParallelAstar::new(n_threads, stack)
+                    };
+                    solve(solver, stack)
+                }
             }
         }
     }

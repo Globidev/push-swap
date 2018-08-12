@@ -11,6 +11,9 @@ pub enum Options {
     Solve {
         #[structopt(short="s", long="strategy", default_value="dumb")]
         strategy: SolveStrategy,
+
+        #[structopt(short="p", long="par-threads")]
+        par_threads: Option<usize>,
         // Positional
         raw_stack: Vec<u32>
     }
@@ -18,7 +21,7 @@ pub enum Options {
 
 #[derive(Debug)]
 pub enum SolveStrategy {
-    AStar, Dumb
+    AStar, Dumb, ParallelAStar
 }
 
 use std::str::FromStr;
@@ -28,8 +31,9 @@ impl FromStr for SolveStrategy {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "astar" => Ok(SolveStrategy::AStar),
-            "dumb"  => Ok(SolveStrategy::Dumb),
+            "astar"     => Ok(SolveStrategy::AStar),
+            "dumb"      => Ok(SolveStrategy::Dumb),
+            "par-astar" => Ok(SolveStrategy::ParallelAStar),
             invalid => Err(String::from(invalid))
         }
     }

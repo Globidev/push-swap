@@ -4,3 +4,4 @@ use instruction::Instruction;
 
 pub mod dumb;
 pub mod astar;
+pub mod parallel_astar;
