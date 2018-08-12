@@ -1,6 +1,6 @@
 #[derive(StructOpt, Debug)]
 pub struct Options {
-    #[structopt(long="stack-type", default_value="vecdeque")]
+    #[structopt(long="stack-type", default_value="linked-list")]
     pub stack_type: StackType,
 
     #[structopt(subcommand)]
@@ -13,6 +13,7 @@ pub enum Command {
     Check {
         #[structopt(short="d", long="debug-states")]
         debug_states: bool,
+
         // Positional
         raw_stack: Vec<u32>,
     },
@@ -23,6 +24,7 @@ pub enum Command {
 
         #[structopt(short="p", long="par-threads")]
         par_threads: Option<usize>,
+
         // Positional
         raw_stack: Vec<u32>
     }
