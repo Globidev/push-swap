@@ -8,7 +8,7 @@ pub struct LLStack<T>(LinkedList<T>);
 
 impl<T> super::Stack<T> for LLStack<T>
 where
-    T: PartialOrd + fmt::Display + Default + Hash + Clone
+    T: PartialOrd + fmt::Display + Default + Hash + Clone + Send + 'static
 {
     fn push(&mut self, n: T) {
         self.0.push_front(n);

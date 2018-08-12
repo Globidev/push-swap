@@ -2,11 +2,10 @@ use std::iter::FromIterator;
 use std::fmt::Display;
 use std::hash::Hash;
 
-pub mod linked_list;
-
 pub trait Stack<T: PartialOrd>:
     Default + Clone + PartialEq +
-    Display + Hash + FromIterator<T>
+    Display + Hash + FromIterator<T> +
+    Send + 'static
 {
     // Main problem operations
     fn push(&mut self, val: T);
@@ -26,5 +25,8 @@ pub trait Stack<T: PartialOrd>:
         let len = self.len();
         self.rotate_n(len - n)
     }
-
 }
+
+pub mod linked_list;
+pub mod vecdeque;
+pub mod vec;
