@@ -1,3 +1,5 @@
+#![feature(generators, generator_trait)]
+
 #[macro_use] extern crate structopt;
 extern crate num_cpus;
 
