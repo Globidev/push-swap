@@ -73,10 +73,37 @@ where
         })
     }
 
+    fn maximum(&self) -> Option<(&T, usize)> {
+        self.0.iter().zip(0..).fold(None, |min, (e, i)| {
+            match min {
+                Some((p, _)) if e < p => min,
+                _                     => Some((e, i))
+            }
+        })
+    }
+
     fn rotate_n(&mut self, n: usize)  {
         let mut high = self.0.split_off(n);
         ::std::mem::swap(&mut self.0, &mut high);
         self.0.append(&mut high)
+    }
+
+    fn insert_index(&self, t: &T) -> Option<usize> {
+        let lefts = self.0.iter();
+        let rights = self.0.iter().skip(1).chain(self.0.iter().take(1));
+
+        lefts.zip(rights).zip(1..).find_map(|((l, r), i)| {
+            match l >= t && r <= t {
+                true => Some(i),
+                false => None
+            }
+        })
+    }
+
+    fn peek(&self, n: isize) -> &T {
+        let index = if n < 0 { self.0.len() - (n % (self.0.len() as isize)).abs() as usize - 1 }
+                    else     { n as usize % self.0.len() };
+        self.0.get(index).unwrap()
     }
 }
 

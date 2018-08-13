@@ -7,3 +7,4 @@ mod utils;
 pub mod dumb;
 pub mod astar;
 pub mod parallel_astar;
+pub mod insert;
