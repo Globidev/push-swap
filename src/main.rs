@@ -1,4 +1,5 @@
 #![feature(generators, generator_trait)]
+#![feature(iterator_find_map)]
 
 #[macro_use] extern crate structopt;
 extern crate num_cpus;
@@ -14,7 +15,7 @@ use options::{Options, Command, SolveStrategy, StackType};
 use structopt::StructOpt;
 use checker::*;
 use stack::{linked_list::LLStack, vecdeque::VDStack, vec::VecStack};
-use solver::{astar, dumb, parallel_astar};
+use solver::{astar, dumb, insert, parallel_astar};
 
 use utils::N;
 
@@ -45,8 +46,9 @@ where
             let stack = raw_stack.into_iter().collect::<Stack>();
 
             match strategy {
-                SolveStrategy::AStar => solve(astar::Astar::new, stack),
-                SolveStrategy::Dumb  => solve(dumb::DumbSolver::new, stack),
+                SolveStrategy::AStar     => solve(astar::Astar::new, stack),
+                SolveStrategy::Dumb      => solve(dumb::DumbSolver::new, stack),
+                SolveStrategy::Insertion => solve(insert::InsertSolver::new, stack),
                 SolveStrategy::ParallelAStar => {
                     let solver = |stack| {
                         let n_threads = par_threads.unwrap_or_else(num_cpus::get);
