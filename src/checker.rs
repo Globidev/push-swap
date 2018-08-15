@@ -22,12 +22,11 @@ pub fn check<S: Stack<N>>(config: CheckConfig) -> ! {
 
     println!("Start: {}", stack.to_string().blue().on_yellow());
 
-    let instr_count = instructions.fold(0, |c, i| {
-        execute(&i, &mut stack, &mut side_stack);
+    let instr_count = instructions.fold(0, |c, instr| {
+        execute(&instr, &mut stack, &mut side_stack);
         if debug_states {
-            println!(
-                "{:3} => {:width$} {} {}",
-                i.to_string().purple(),
+            println!("{} => {:width$} {} {}",
+                format!("{:3}", instr).purple(),
                 stack.to_string(), "|".cyan(), side_stack,
                 width=stack_display_width
             );

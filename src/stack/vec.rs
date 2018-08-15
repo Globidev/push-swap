@@ -123,10 +123,11 @@ impl<T: fmt::Display + PartialOrd> fmt::Display for VecStack<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut it = self.0.iter();
 
-        if let Some(n) = it.next() {
-            write!(f, "{}", n)?;
-            for n in it {
-                write!(f, " {}", n)?
+        match it.next() {
+            None    => write!(f, "Empty")?,
+            Some(n) => {
+                write!(f, "{}", n)?;
+                for n in it { write!(f, " {}", n)?; }
             }
         }
 
