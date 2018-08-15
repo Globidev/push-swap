@@ -9,7 +9,7 @@ mod par_astar;
 mod naive_insert;
 mod smart_insert;
 
-pub use self::astar::Astar;
-pub use self::par_astar::ParAstar;
-pub use self::naive_insert::NaiveInsert;
-pub use self::smart_insert::SmartInsert;
+pub use self::astar::astar;
+pub use self::naive_insert::naive_insert;
+pub use self::smart_insert::smart_insert;
+pub use self::par_astar::par_astar;

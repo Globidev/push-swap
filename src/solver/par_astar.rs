@@ -8,30 +8,12 @@ use self::crossbeam_deque::{fifo as work_steal_fifo, Steal, Stealer};
 use std::sync::{mpsc, Arc, RwLock};
 use std::thread;
 
-use std::collections::{VecDeque, HashSet};
+use std::collections::{VecDeque, HashSet, vec_deque::IntoIter};
 
-pub struct ParAstar {
-    moves: VecDeque<Instruction>
-}
-
-impl ParAstar {
-    pub fn new(n_threads: usize, stack: impl Stack<N>) -> Self {
-        // We have the main worker thread + at least 1 stealer so the
-        // amount of extra workers we can get is max(0, n_threads - 2)
-        let extra_worker_count = n_threads.saturating_sub(2);
-
-        Self {
-            moves: solve(extra_worker_count, stack)
-        }
-    }
-}
-
-impl Iterator for ParAstar {
-    type Item = Instruction;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.moves.pop_front()
-    }
+pub fn par_astar<S: Stack<N>>(extra_worker_count: usize)
+    -> impl FnOnce(S) -> IntoIter<Instruction>
+{
+    move |stack| solve(extra_worker_count, stack).into_iter()
 }
 
 type ClosedSet = Arc<RwLock<HashSet<u64>>>;

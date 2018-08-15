@@ -11,12 +11,10 @@ mod checker;
 mod solver;
 mod utils;
 
-use options::{Options, Command, SolveStrategy, StackType};
-
+use options::*;
 use checker::*;
 use stack::*;
 use solver::*;
-
 use utils::N;
 
 fn main() {
@@ -32,42 +30,36 @@ fn main() {
     }
 }
 
-fn run_with_stack_type<Stack>(command: Command)
-where
-    Stack: stack::Stack<N>
-{
+fn run_with_stack_type<S: Stack<N>>(command: Command) {
     match command {
         Command::Check { debug_states, raw_stack } => {
             let app_config = CheckerConfig {
-                stack: raw_stack.into_iter().collect::<Stack>(),
+                stack: raw_stack.into_iter().collect::<S>(),
                 debug_states
             };
             check(app_config);
         },
 
         Command::Solve { strategy, par_threads, raw_stack } => {
-            let stack = raw_stack.into_iter().collect::<Stack>();
+            let stack = raw_stack.into_iter().collect::<S>();
 
             match strategy {
-                SolveStrategy::AStar       => solve(Astar::new, stack),
-                SolveStrategy::NaiveInsert => solve(NaiveInsert::new, stack),
-                SolveStrategy::SmartInsert => solve(SmartInsert::new, stack),
+                SolveStrategy::AStar       => solve(astar, stack),
+                SolveStrategy::NaiveInsert => solve(naive_insert, stack),
+                SolveStrategy::SmartInsert => solve(smart_insert, stack),
                 SolveStrategy::ParAStar    => {
-                    let solver = |stack| {
-                        let n_threads = par_threads.unwrap_or_else(num_cpus::get);
-                        ParAstar::new(n_threads, stack)
-                    };
-                    solve(solver, stack)
+                    let n_threads = par_threads.unwrap_or_else(num_cpus::get);
+                    solve(par_astar(n_threads), stack)
                 }
             }
         }
     }
 }
 
-fn solve<Solver, Stack, Solution>(solver: Solver, stack: Stack)
+fn solve<S, Solver, Solution>(solver: Solver, stack: S)
 where
-    Stack: stack::Stack<N>,
-    Solver: FnOnce(Stack) -> Solution,
+    S: Stack<N>,
+    Solver: FnOnce(S) -> Solution,
     Solution: Iterator<Item = instruction::Instruction>
 {
     use std::fmt::Write;

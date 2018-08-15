@@ -3,25 +3,7 @@ use super::utils::*;
 
 use std::collections::{VecDeque, HashSet};
 
-pub struct Astar {
-    moves: VecDeque<Instruction>
-}
-
-impl Astar {
-    pub fn new(stack: impl Stack<N>) -> Self {
-        Self { moves: solve(stack) }
-    }
-}
-
-impl Iterator for Astar {
-    type Item = Instruction;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.moves.pop_front()
-    }
-}
-
-fn solve(stack: impl Stack<N>) -> VecDeque<Instruction> {
+pub fn astar(stack: impl Stack<N>) -> impl Iterator<Item = Instruction> {
     let mut open_set = VecDeque::new();
     let mut closed_set = HashSet::new();
 
@@ -29,7 +11,7 @@ fn solve(stack: impl Stack<N>) -> VecDeque<Instruction> {
 
     while let Some(node) = open_set.pop_front() {
         if node.b.len() == 0 && node.a.is_sorted() {
-            return node.instrs
+            return node.instrs.into_iter()
         }
 
         closed_set.insert(hash(&node));
