@@ -9,16 +9,10 @@ use std::process::exit;
 use stack::Stack;
 use instruction::Instruction;
 
-pub struct CheckerConfig<S> {
-    pub stack: S,
-    pub debug_states: bool
-}
+use options::CheckConfig;
 
-pub fn check<S>(config: CheckerConfig<S>) -> !
-where
-    S: Stack<N> + Sized
-{
-    let mut stack = config.stack;
+pub fn check<S: Stack<N>>(config: CheckConfig) -> ! {
+    let mut stack = config.raw_stack.into_iter().collect::<S>();
     let mut side_stack = S::default();
 
     let stack_display_width = stack.to_string().len();

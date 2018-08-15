@@ -32,13 +32,7 @@ fn main() {
 
 fn run_with_stack_type<S: Stack<N>>(command: Command) {
     match command {
-        Command::Check { debug_states, raw_stack } => {
-            let app_config = CheckerConfig {
-                stack: raw_stack.into_iter().collect::<S>(),
-                debug_states
-            };
-            check(app_config);
-        },
+        Command::Check(config) => check::<S>(config),
 
         Command::Solve { strategy, par_threads, raw_stack } => {
             let stack = raw_stack.into_iter().collect::<S>();

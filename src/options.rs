@@ -10,13 +10,7 @@ pub struct Options {
 #[derive(StructOpt, Debug)]
 pub enum Command {
     #[structopt(name = "check")]
-    Check {
-        #[structopt(short="d", long="debug-states")]
-        debug_states: bool,
-
-        // Positional
-        raw_stack: Vec<u32>,
-    },
+    Check(CheckConfig),
     #[structopt(name = "solve")]
     Solve {
         #[structopt(short="s", long="strategy", default_value="dumb")]
@@ -28,6 +22,14 @@ pub enum Command {
         // Positional
         raw_stack: Vec<u32>
     }
+}
+
+#[derive(StructOpt, Debug)]
+pub struct CheckConfig {
+    #[structopt(short="d", long="debug-states")]
+    pub debug_states: bool,
+    // Positional
+    pub raw_stack: Vec<u32>,
 }
 
 #[derive(Debug)]
