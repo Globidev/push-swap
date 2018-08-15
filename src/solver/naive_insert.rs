@@ -23,12 +23,7 @@ pub fn naive_insert(mut stack: impl Stack<N>)
             // Otherwise we rotate to the next minimum value and push
             let (instr, n) = shortest_rotation(&stack, min_idx);
 
-            match instr {
-                RotateA => stack.rotate_n(n),
-                RRotateA => stack.rrotate_n(n),
-                _ => ()
-            };
-
+            stack.rotate_n(min_idx);
             drop(stack.pop());
 
             yield_from!(repeat_n(instr, n));

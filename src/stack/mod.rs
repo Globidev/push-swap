@@ -22,10 +22,6 @@ pub trait Stack<T: PartialOrd>:
     fn maximum(&self) -> Option<(&T, usize)>;
 
     fn rotate_n(&mut self, n: usize);
-    fn rrotate_n(&mut self, n: usize) {
-        let len = self.len();
-        self.rotate_n(len - n)
-    }
 
     fn insert_index(&self, t: &T) -> Option<usize>;
     fn peek(&self, n: isize) -> &T;
