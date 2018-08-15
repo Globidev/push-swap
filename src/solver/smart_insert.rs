@@ -1,12 +1,12 @@
 use super::*;
 
-pub struct InsertSolver;
+pub struct SmartInsert;
 
 macro_rules! yield_from {
     ($x: expr) => { for e in $x { yield e } };
 }
 
-impl InsertSolver {
+impl SmartInsert {
     pub fn new<S: Stack<N>>(mut stack: S) -> impl Iterator<Item = Instruction> {
         use self::Instruction::*;
 

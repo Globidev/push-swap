@@ -10,11 +10,11 @@ use std::thread;
 
 use std::collections::{VecDeque, HashSet};
 
-pub struct ParallelAstar {
+pub struct ParAstar {
     moves: VecDeque<Instruction>
 }
 
-impl ParallelAstar {
+impl ParAstar {
     pub fn new(n_threads: usize, stack: impl Stack<N>) -> Self {
         // We have the main worker thread + at least 1 stealer so the
         // amount of extra workers we can get is max(0, n_threads - 2)
@@ -26,7 +26,7 @@ impl ParallelAstar {
     }
 }
 
-impl Iterator for ParallelAstar {
+impl Iterator for ParAstar {
     type Item = Instruction;
 
     fn next(&mut self) -> Option<Self::Item> {

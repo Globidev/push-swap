@@ -30,8 +30,11 @@ pub trait Stack<T: PartialOrd>:
     fn insert_index(&self, t: &T) -> Option<usize>;
     fn peek(&self, n: isize) -> &T;
 }
-}
 
-pub mod linked_list;
-pub mod vecdeque;
-pub mod vec;
+mod linked_list;
+mod vec_deque;
+mod vec;
+
+pub use self::linked_list::LLStack;
+pub use self::vec_deque::VDStack;
+pub use self::vec::VecStack;

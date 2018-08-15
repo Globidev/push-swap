@@ -1,12 +1,12 @@
 use super::*;
 
-pub struct DumbSolver;
+pub struct NaiveInsert;
 
 macro_rules! yield_from {
     ($x: expr) => { for e in $x { yield e } };
 }
 
-impl DumbSolver {
+impl NaiveInsert {
     pub fn new(mut stack: impl Stack<N>) -> impl Iterator<Item = Instruction> {
         use self::Instruction::*;
 

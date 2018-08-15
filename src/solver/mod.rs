@@ -4,7 +4,12 @@ use instruction::Instruction;
 
 mod utils;
 
-pub mod dumb;
-pub mod astar;
-pub mod parallel_astar;
-pub mod insert;
+mod astar;
+mod par_astar;
+mod naive_insert;
+mod smart_insert;
+
+pub use self::astar::Astar;
+pub use self::par_astar::ParAstar;
+pub use self::naive_insert::NaiveInsert;
+pub use self::smart_insert::SmartInsert;

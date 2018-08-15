@@ -32,7 +32,7 @@ pub enum Command {
 
 #[derive(Debug)]
 pub enum SolveStrategy {
-    AStar, Dumb, Insertion, ParallelAStar
+    AStar, ParAStar, NaiveInsert, SmartInsert,
 }
 
 #[derive(Debug)]
@@ -47,10 +47,10 @@ impl FromStr for SolveStrategy {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "astar"     | "a*"  => Ok(SolveStrategy::AStar),
-            "naive-insert"      => Ok(SolveStrategy::Dumb),
-            "par-astar" | "pa*" => Ok(SolveStrategy::ParallelAStar),
-            "smart-insert"      => Ok(SolveStrategy::Insertion),
+            "astar"        | "a*"    => Ok(SolveStrategy::AStar),
+            "par-astar"    | "para*" => Ok(SolveStrategy::ParAStar),
+            "naive-insert" | "naive" => Ok(SolveStrategy::NaiveInsert),
+            "smart-insert" | "smart" => Ok(SolveStrategy::SmartInsert),
             invalid => Err(String::from(invalid))
         }
     }

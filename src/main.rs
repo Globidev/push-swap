@@ -12,20 +12,23 @@ mod solver;
 mod utils;
 
 use options::{Options, Command, SolveStrategy, StackType};
-use structopt::StructOpt;
+
 use checker::*;
-use stack::{linked_list::LLStack, vecdeque::VDStack, vec::VecStack};
-use solver::{astar, dumb, insert, parallel_astar};
+use stack::*;
+use solver::*;
 
 use utils::N;
 
 fn main() {
+    use StackType::*;
+    use structopt::StructOpt;
+
     let opts = Options::from_args();
 
     match opts.stack_type {
-        StackType::LinkedList => run_with_stack_type::<LLStack<N>>(opts.command),
-        StackType::VecDeque   => run_with_stack_type::<VDStack<N>>(opts.command),
-        StackType::Vec        => run_with_stack_type::<VecStack<N>>(opts.command),
+        LinkedList => run_with_stack_type::<LLStack<N>>(opts.command),
+        VecDeque   => run_with_stack_type::<VDStack<N>>(opts.command),
+        Vec        => run_with_stack_type::<VecStack<N>>(opts.command),
     }
 }
 
@@ -46,13 +49,13 @@ where
             let stack = raw_stack.into_iter().collect::<Stack>();
 
             match strategy {
-                SolveStrategy::AStar     => solve(astar::Astar::new, stack),
-                SolveStrategy::Dumb      => solve(dumb::DumbSolver::new, stack),
-                SolveStrategy::Insertion => solve(insert::InsertSolver::new, stack),
-                SolveStrategy::ParallelAStar => {
+                SolveStrategy::AStar       => solve(Astar::new, stack),
+                SolveStrategy::NaiveInsert => solve(NaiveInsert::new, stack),
+                SolveStrategy::SmartInsert => solve(SmartInsert::new, stack),
+                SolveStrategy::ParAStar    => {
                     let solver = |stack| {
                         let n_threads = par_threads.unwrap_or_else(num_cpus::get);
-                        parallel_astar::ParallelAstar::new(n_threads, stack)
+                        ParAstar::new(n_threads, stack)
                     };
                     solve(solver, stack)
                 }
