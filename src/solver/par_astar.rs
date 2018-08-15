@@ -10,9 +10,13 @@ use std::thread;
 
 use std::collections::{VecDeque, HashSet, vec_deque::IntoIter};
 
-pub fn par_astar<S: Stack<N>>(extra_worker_count: usize)
+pub fn par_astar<S: Stack<N>>(n_threads: usize)
     -> impl FnOnce(S) -> IntoIter<Instruction>
 {
+    // We have the main worker thread + at least 1 stealer so the
+    // amount of extra workers we can get is max(0, n_threads - 2)
+    let extra_worker_count = n_threads.saturating_sub(2);
+
     move |stack| solve(extra_worker_count, stack).into_iter()
 }
 
