@@ -20,13 +20,15 @@ fn main() {
     use StackType::*;
     use structopt::StructOpt;
 
-    let opts = Options::from_args();
+    let Options { stack_type, command } = Options::from_args();
 
-    match opts.stack_type {
-        LinkedList => run_with_stack_type::<LLStack<N>>(opts.command),
-        VecDeque   => run_with_stack_type::<VDStack<N>>(opts.command),
-        Vec        => run_with_stack_type::<VecStack<N>>(opts.command),
-    }
+    let run_command = match stack_type {
+        LinkedList => run_with_stack_type::<LLStack<N>>,
+        VecDeque   => run_with_stack_type::<VDStack<N>>,
+        Vec        => run_with_stack_type::<VecStack<N>>,
+    };
+
+    run_command(command)
 }
 
 fn run_with_stack_type<S: Stack<N>>(command: Command) {
