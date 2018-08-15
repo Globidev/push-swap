@@ -12,24 +12,28 @@ pub enum Command {
     #[structopt(name = "check")]
     Check(CheckConfig),
     #[structopt(name = "solve")]
-    Solve {
-        #[structopt(short="s", long="strategy", default_value="dumb")]
-        strategy: SolveStrategy,
-
-        #[structopt(short="p", long="par-threads")]
-        par_threads: Option<usize>,
-
-        // Positional
-        raw_stack: Vec<u32>
-    }
+    Solve(SolveConfig)
 }
 
 #[derive(StructOpt, Debug)]
 pub struct CheckConfig {
     #[structopt(short="d", long="debug-states")]
     pub debug_states: bool,
+
     // Positional
     pub raw_stack: Vec<u32>,
+}
+
+#[derive(StructOpt, Debug)]
+pub struct SolveConfig {
+    #[structopt(short="s", long="strategy", default_value="dumb")]
+    pub strategy: SolveStrategy,
+
+    #[structopt(short="p", long="par-threads")]
+    pub par_threads: Option<usize>,
+
+    // Positional
+    pub raw_stack: Vec<u32>
 }
 
 #[derive(Debug)]
